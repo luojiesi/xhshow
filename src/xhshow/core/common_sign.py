@@ -19,12 +19,14 @@ class XsCommonSigner:
         self._fp_generator = FingerprintGenerator(self.config)
         self._encoder = Base64Encoder(self.config)
 
-    def sign(self, cookie_dict: dict[str, Any]) -> str:
+    def sign(self, cookie_dict: dict[str, Any], b1_override: str | None = None) -> str:
         """
         Generate x-s-common signature
 
         Args:
             cookie_dict: Cookie dictionary (must be dict, not string)
+            b1_override: Optional real browser b1 fingerprint (from localStorage).
+                If None, generates synthetic b1 (which servers may reject for data APIs).
 
         Returns:
             x-s-common signature string
@@ -33,8 +35,11 @@ class XsCommonSigner:
             KeyError: If 'a1' cookie is missing
         """
         a1_value = cookie_dict["a1"]
-        fingerprint = self._fp_generator.generate(cookies=cookie_dict, user_agent=self.config.PUBLIC_USERAGENT)
-        b1 = self._fp_generator.generate_b1(fingerprint)
+        if b1_override:
+            b1 = b1_override
+        else:
+            fingerprint = self._fp_generator.generate(cookies=cookie_dict, user_agent=self.config.PUBLIC_USERAGENT)
+            b1 = self._fp_generator.generate_b1(fingerprint)
 
         x9 = CRC32.crc32_js_int(b1)
 

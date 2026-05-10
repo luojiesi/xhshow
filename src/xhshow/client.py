@@ -213,19 +213,21 @@ class Xhshow:
     def sign_xs_common(
         self,
         cookie_dict: dict[str, Any] | str,
+        b1_override: str | None = None,
     ) -> str:
         """
         Generate x-s-common signature
 
         Args:
             cookie_dict: Complete cookie dictionary or cookie string
+            b1_override: Optional real browser b1 fingerprint (from localStorage).
 
         Returns:
             Encoded x-s-common signature string
         """
         parsed_cookies = self._parse_cookies(cookie_dict)
         signer = XsCommonSigner(self.config)
-        return signer.sign(parsed_cookies)
+        return signer.sign(parsed_cookies, b1_override=b1_override)
 
     @validate_get_signature_params
     def sign_xs_get(
@@ -473,6 +475,7 @@ class Xhshow:
         timestamp: float | None = None,
         session: SessionManager | None = None,
         sign_format: Literal["xys", "xyw"] = "xys",
+        b1_override: str | None = None,
     ) -> dict[str, str]:
         """
         Generate complete request headers with signature and trace IDs
@@ -544,7 +547,7 @@ class Xhshow:
         else:
             x_s = self.sign_xs(method_upper, uri, a1_value, xsec_appid, request_data, timestamp, session)
 
-        x_s_common = self.sign_xs_common(cookie_dict)
+        x_s_common = self.sign_xs_common(cookie_dict, b1_override=b1_override)
         x_t = self.get_x_t(timestamp)
         x_b3_traceid = self.get_b3_trace_id()
         x_xray_traceid = self.get_xray_trace_id(timestamp=int(timestamp * 1000))
@@ -566,6 +569,7 @@ class Xhshow:
         timestamp: float | None = None,
         session: SessionManager | None = None,
         sign_format: Literal["xys", "xyw"] = "xys",
+        b1_override: str | None = None,
     ) -> dict[str, str]:
         """
         Generate complete request headers for GET request (convenience method)
@@ -591,6 +595,7 @@ class Xhshow:
             timestamp=timestamp,
             session=session,
             sign_format=sign_format,
+            b1_override=b1_override,
         )
 
     def sign_headers_post(
@@ -602,6 +607,7 @@ class Xhshow:
         timestamp: float | None = None,
         session: SessionManager | None = None,
         sign_format: Literal["xys", "xyw"] = "xys",
+        b1_override: str | None = None,
     ) -> dict[str, str]:
         """
         Generate complete request headers for POST request (convenience method)
@@ -627,4 +633,5 @@ class Xhshow:
             timestamp=timestamp,
             session=session,
             sign_format=sign_format,
+            b1_override=b1_override,
         )
